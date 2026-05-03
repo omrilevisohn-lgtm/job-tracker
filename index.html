@@ -9,10 +9,12 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; background: #0d0d0f; font-family: 'Segoe UI', system-ui, sans-serif; color: #e8e4dc; }
-        /* עיצוב כפתורי זמן ותאריך */
+        body { margin: 0; background: #0d0d0f; font-family: 'Segoe UI', system-ui, sans-serif; color: #e8e4dc; overflow-x: hidden; }
+        input, button, textarea { font-family: inherit; }
         input[type=date]::-webkit-calendar-picker-indicator,
         input[type=time]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes modalIn { from { opacity:0; transform:scale(.96) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
     </style>
 </head>
 <body>
@@ -22,27 +24,64 @@
         const { useState, useMemo, useEffect } = React;
 
         const JOB_COLORS = ["#f59e0b","#10b981","#3b82f6","#ec4899","#8b5cf6","#ef4444","#06b6d4","#f97316"];
+        const JOB_ICONS = ["🍽️","🍸","🚗","💼","🛒","🎯","🏗️","💻","🎨","🏥","📦","🎤"];
+        const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
         const DEFAULT_JOBS = [
             { id: "waiter", label: "מלצרות", icon: "🍽️", color: "#10b981" },
             { id: "bar", label: "בר", icon: "🍸", color: "#f59e0b" },
         ];
 
+        const todayStr = () => new Date().toISOString().split("T")[0];
         const formatCurrency = (n) => new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 0 }).format(n || 0);
+        
+        const calcHours = (start, end) => {
+            if (!start || !end) return 0;
+            const [sh, sm] = start.split(":").map(Number);
+            const [eh, em] = end.split(":").map(Number);
+            let mins = eh * 60 + em - (sh * 60 + sm);
+            if (mins < 0) mins += 24 * 60;
+            return +(mins / 60).toFixed(2);
+        };
 
         function ShiftTracker() {
-            const [jobs, setJobs] = useState(() => {
-                const saved = localStorage.getItem("shiftlog_jobs");
-                return saved ? JSON.parse(saved) : DEFAULT_JOBS;
-            });
-            const [shifts, setShifts] = useState(() => {
-                const saved = localStorage.getItem("shiftlog_shifts");
-                return saved ? JSON.parse(saved) : [];
-            });
-            const [view, setView] = useState("shifts"); // 'shifts', 'add', 'stats'
+            const [jobs, setJobs] = useState(() => JSON.parse(localStorage.getItem("shiftlog_jobs")) || DEFAULT_JOBS);
+            const [shifts, setShifts] = useState(() => JSON.parse(localStorage.getItem("shiftlog_shifts")) || []);
+            const [view, setView] = useState("shifts");
             const [showJobManager, setShowJobManager] = useState(false);
+            const [toast, setToast] = useState(null);
+            const [editId, setEditId] = useState(null);
+
+            // ניהול עבודה חדשה
+            const [newJobLabel, setNewJobLabel] = useState("");
+            const [newJobIcon, setNewJobIcon] = useState("🍽️");
+            const [newJobColor, setNewJobColor] = useState(JOB_COLORS[0]);
+
+            const emptyForm = { date: todayStr(), start: "", end: "", total: "", tip: "", travel: "", notes: "", jobType: jobs[0]?.id, payMode: "total" };
+            const [form, setForm] = useState(emptyForm);
 
             useEffect(() => { localStorage.setItem("shiftlog_jobs", JSON.stringify(jobs)); }, [jobs]);
             useEffect(() => { localStorage.setItem("shiftlog_shifts", JSON.stringify(shifts)); }, [shifts]);
+
+            const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+
+            const saveShift = () => {
+                if (!form.start || !form.end || !form.total) { showToast("נא למלא את כל השדות"); return; }
+                let finalTotal = form.total;
+                if (form.payMode === "hourly") finalTotal = (parseFloat(form.total) * calcHours(form.start, form.end)).toFixed(2);
+                
+                const shiftData = { ...form, total: finalTotal, tip: form.tip || 0, travel: form.travel || 0, id: editId || Date.now() };
+                
+                if (editId) {
+                    setShifts(shifts.map(s => s.id === editId ? shiftData : s));
+                    setEditId(null);
+                } else {
+                    setShifts([shiftData, ...shifts]);
+                }
+                
+                setForm(emptyForm);
+                setView("shifts");
+                showToast("נשמר בהצלחה ✓");
+            };
 
             const stats = useMemo(() => {
                 const totalEarnings = shifts.reduce((a, s) => a + (parseFloat(s.total) || 0), 0);
@@ -52,52 +91,101 @@
 
             return (
                 <div style={st.root}>
-                    {/* Header - כמו ב-image_8.png */}
+                    {toast && <div style={st.toast}>{toast}</div>}
+
+                    {/* מודל ניהול עבודות */}
+                    {showJobManager && (
+                        <div style={st.overlay} onClick={() => setShowJobManager(false)}>
+                            <div style={st.modal} onClick={e => e.stopPropagation()}>
+                                <div style={st.modalHead}>
+                                    <span style={st.modalTitle}>⚙️ ניהול עבודות</span>
+                                    <button style={st.closeBtn} onClick={() => setShowJobManager(false)}>✕</button>
+                                </div>
+                                <div style={{maxHeight: '200px', overflowY: 'auto', marginBottom: 20}}>
+                                    {jobs.map(j => (
+                                        <div key={j.id} style={st.jobRow}>
+                                            <span>{j.icon} {j.label}</span>
+                                            <button style={st.delMini} onClick={() => setJobs(jobs.filter(jj => jj.id !== j.id))}>🗑️</button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={st.addBox}>
+                                    <input placeholder="שם עבודה..." style={st.input} value={newJobLabel} onChange={e => setNewJobLabel(e.target.value)} />
+                                    <div style={{display:'flex', gap:5, marginTop:10, flexWrap:'wrap'}}>
+                                        {JOB_ICONS.slice(0,6).map(i => <button key={i} onClick={()=>setNewJobIcon(i)} style={{background: newJobIcon===i?'#f59e0b':'#1a1a1f', border:'none', borderRadius:5, padding:5}}>{i}</button>)}
+                                    </div>
+                                    <button style={{...st.btnPrimary, marginTop:15}} onClick={()=>{
+                                        if(!newJobLabel) return;
+                                        setJobs([...jobs, {id:Date.now(), label:newJobLabel, icon:newJobIcon, color:JOB_COLORS[jobs.length%8]}]);
+                                        setNewJobLabel("");
+                                    }}>הוסף סוג עבודה</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <header style={st.header}>
                         <div style={st.headerInner}>
-                            <div style={{ textAlign: "right" }}>
+                            <div style={{textAlign: 'right'}}>
                                 <div style={st.logo}>ShiftLog ⚡</div>
                                 <div style={st.logoSub}>מעקב משמרות</div>
                             </div>
-                            <div style={{ display: "flex", gap: 20 }}>
-                                <div style={{ textAlign: "center" }}>
-                                    <div style={st.hVal}>{formatCurrency(stats.total)}</div>
-                                    <div style={st.hLbl}>סה״כ</div>
-                                </div>
-                                <div style={{ textAlign: "center" }}>
-                                    <div style={st.hVal}>{stats.count}</div>
-                                    <div style={st.hLbl}>משמרות</div>
-                                </div>
+                            <div style={{display: 'flex', gap: 20}}>
+                                <div style={{textAlign: 'center'}}><div style={st.hVal}>{formatCurrency(stats.total)}</div><div style={st.hLbl}>סה״כ</div></div>
+                                <div style={{textAlign: 'center'}}><div style={st.hVal}>{stats.count}</div><div style={st.hLbl}>משמרות</div></div>
                             </div>
                         </div>
                     </header>
 
-                    {/* Navigation - כמו ב-image_8.png */}
                     <nav style={st.nav}>
-                        <button style={st.navAdd} onClick={() => setView("add")}>+ משמרת</button>
+                        <button style={st.navAdd} onClick={() => {setEditId(null); setForm(emptyForm); setView("add")}}>+ משמרת</button>
                         <button style={{...st.navBtn, ...(view === 'stats' ? st.navActive : {})}} onClick={() => setView("stats")}>📊 סטטיסטיקות</button>
                         <button style={{...st.navBtn, ...(view === 'shifts' ? st.navActive : {})}} onClick={() => setView("shifts")}>📋 משמרות</button>
                     </nav>
 
-                    {/* Main Content */}
                     <main style={st.main}>
                         {view === "shifts" && shifts.length === 0 && (
                             <div style={st.empty}>
-                                <div style={{ fontSize: 60, marginBottom: 15 }}>🍽️</div>
-                                <div style={{ fontSize: 18, color: "#e8e4dc", fontWeight: "600" }}>אין משמרות עדיין</div>
-                                <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>לחץ על "+ משמרת" כדי להתחיל</div>
-                                
-                                <button style={st.mngBtn} onClick={() => setShowJobManager(true)}>
-                                    ⚙️ ניהול עבודות
-                                </button>
+                                <div style={{fontSize: 60, marginBottom: 15}}>🍽️</div>
+                                <div style={{fontSize: 18, fontWeight: 'bold'}}>אין משמרות עדיין</div>
+                                <div style={{fontSize: 14, color: '#666', marginTop: 8}}>לחץ על "+ משמרת" כדי להתחיל</div>
+                                <button style={st.mngBtn} onClick={() => setShowJobManager(true)}>⚙️ ניהול עבודות</button>
                             </div>
                         )}
-                        
-                        {/* כאן תבוא הלוגיקה של הוספת משמרת ורשימה */}
+
+                        {view === "shifts" && shifts.length > 0 && (
+                            <div>
+                                {shifts.map(s => (
+                                    <div key={s.id} style={st.shiftCard} onClick={()=>{setEditId(s.id); setForm(s); setView("add")}}>
+                                        <div style={{flex:1}}>
+                                            <div style={{fontWeight:'bold'}}>{jobs.find(j=>j.id===s.jobType)?.label}</div>
+                                            <div style={{fontSize:12, color:'#888'}}>{s.date} | {s.start}-{s.end}</div>
+                                        </div>
+                                        <div style={{fontWeight:'bold', color:'#f59e0b'}}>{formatCurrency(parseFloat(s.total) + parseFloat(s.tip))}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         {view === "add" && (
-                            <div style={{textAlign: 'center', padding: 20}}>
-                                <p>כאן יהיה הטופס (המשך הקוד המקורי שלך)</p>
-                                <button style={st.navBtn} onClick={() => setView("shifts")}>חזור</button>
+                            <div style={st.card}>
+                                <h2 style={{margin:'0 0 20px 0', fontSize:18}}>{editId ? "עריכת משמרת" : "משמרת חדשה"}</h2>
+                                <div style={st.fg}>
+                                    <label style={st.lbl}>סוג עבודה</label>
+                                    <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+                                        {jobs.map(j => (
+                                            <button key={j.id} style={{...st.jobPill, ...(form.jobType === j.id ? {background: j.color, color:'#000', borderColor: j.color} : {})}} onClick={()=>setForm({...form, jobType:j.id})}>{j.icon} {j.label}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div style={st.fg}><label style={st.lbl}>תאריך</label><input type="date" style={st.input} value={form.date} onChange={e=>setForm({...form, date:e.target.value})} /></div>
+                                <div style={st.r2}>
+                                    <div style={st.fg}><label style={st.lbl}>התחלה</label><input type="time" style={st.input} value={form.start} onChange={e=>setForm({...form, start:e.target.value})} /></div>
+                                    <div style={st.fg}><label style={st.lbl}>סיום</label><input type="time" style={st.input} value={form.end} onChange={e=>setForm({...form, end:e.target.value})} /></div>
+                                </div>
+                                <div style={st.fg}><label style={st.lbl}>שכר (₪)</label><input type="number" style={st.input} value={form.total} onChange={e=>setForm({...form, total:e.target.value})} /></div>
+                                <button style={st.btnPrimary} onClick={saveShift}>שמור משמרת</button>
+                                <button style={{...st.btnSec, width:'100%', marginTop:10}} onClick={()=>setView("shifts")}>ביטול</button>
                             </div>
                         )}
                     </main>
@@ -106,20 +194,34 @@
         }
 
         const st = {
-            root: { minHeight: "100vh", background: "#0d0d0f", direction: "rtl" },
+            root: { minHeight: "100vh", background: "#0d0d0f" },
             header: { background: "#13131a", padding: "20px 16px", borderBottom: "1px solid #2a2420" },
             headerInner: { maxWidth: 500, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" },
             logo: { fontSize: 22, fontWeight: "900", color: "#f59e0b" },
-            logoSub: { fontSize: 11, color: "#666", marginTop: -2 },
-            hVal: { fontSize: 18, fontWeight: "700", color: "#f0ead8" },
+            logoSub: { fontSize: 11, color: "#666" },
+            hVal: { fontSize: 18, fontWeight: "bold" },
             hLbl: { fontSize: 10, color: "#666" },
             nav: { maxWidth: 500, margin: "12px auto", display: "flex", gap: 8, padding: "0 16px" },
-            navBtn: { flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #2a2420", background: "transparent", color: "#888", fontSize: 13, cursor: "pointer" },
+            navBtn: { flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #2a2420", background: "transparent", color: "#888", fontSize: 13 },
             navActive: { borderColor: "#f59e0b", color: "#f59e0b", background: "#f59e0b11" },
-            navAdd: { flex: 1, padding: "10px 0", borderRadius: 10, background: "#f59e0b", border: "none", fontWeight: "bold", color: "#000", cursor: "pointer" },
+            navAdd: { flex: 1, padding: "10px 0", borderRadius: 10, background: "#f59e0b", border: "none", fontWeight: "bold", color: "#000" },
             main: { maxWidth: 500, margin: "0 auto", padding: "0 16px" },
-            empty: { textAlign: "center", paddingTop: 100 },
-            mngBtn: { marginTop: 40, padding: "10px 20px", borderRadius: 10, border: "1px solid #2a2420", background: "transparent", color: "#888", fontSize: 14, cursor: "pointer" }
+            empty: { textAlign: "center", paddingTop: 80 },
+            mngBtn: { marginTop: 30, padding: "10px 20px", borderRadius: 10, border: "1px solid #2a2420", background: "transparent", color: "#888" },
+            card: { background: "#13131a", padding: 20, borderRadius: 15, border: "1px solid #2a2420" },
+            input: { width: "100%", background: "#0d0d0f", border: "1px solid #2a2420", borderRadius: 10, padding: 12, color: "#fff" },
+            lbl: { display: "block", fontSize: 13, color: "#888", marginBottom: 5 },
+            r2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
+            fg: { marginBottom: 15 },
+            btnPrimary: { width: "100%", padding: 15, background: "#f59e0b", border: "none", borderRadius: 10, fontWeight: "bold" },
+            btnSec: { background: "transparent", border: "1px solid #2a2420", color: "#888", padding: 12, borderRadius: 10 },
+            shiftCard: { background: "#13131a", padding: 15, borderRadius: 12, border: "1px solid #2a2420", display: 'flex', marginBottom: 10 },
+            toast: { position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#1a1a1f", color: "#f59e0b", padding: "10px 20px", borderRadius: 12, zIndex: 1000 },
+            overlay: { position: "fixed", inset: 0, background: "#000a", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" },
+            modal: { background: "#13131a", padding: 25, borderRadius: 20, width: "90%", maxWidth: 400 },
+            jobPill: { padding: "8px 15px", borderRadius: 10, border: "1px solid #2a2420", background: "transparent", color: "#888", fontSize: 13 },
+            jobRow: { display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #222' },
+            delMini: { background: 'transparent', border: 'none', color: '#666' }
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
