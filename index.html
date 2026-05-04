@@ -8,7 +8,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0d0d0f; color: #e8e4dc; font-family: 'Segoe UI', system-ui, sans-serif; direction: rtl; min-height: 100vh; padding-bottom: 40px; }
     
-    /* Header & Stats */
     .header { background: linear-gradient(135deg,#13131a,#1a1612); border-bottom: 1px solid #2a2420; padding: 20px 16px; }
     .header-inner { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 22px; font-weight: 800; color: #f59e0b; }
@@ -17,38 +16,32 @@
     .h-val { display: block; font-size: 18px; font-weight: 700; color: #f0ead8; }
     .h-lbl { font-size: 11px; color: #666; }
 
-    /* Navigation */
     nav { max-width: 520px; margin: 0 auto; display: flex; gap: 8px; padding: 12px 16px; }
     .nav-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #2a2420; background: transparent; color: #888; font-weight: 600; cursor: pointer; }
     .nav-btn.active { background: #1e1a14; border-color: #f59e0b44; color: #f0ead8; }
     .nav-add { background: #f59e0b !important; color: #0d0d0f !important; border: none !important; }
 
-    /* Main Content */
     main { max-width: 520px; margin: 0 auto; padding: 0 16px; }
     .card { background: #13131a; border: 1px solid #2a2420; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
     .card-title { font-size: 18px; font-weight: 700; color: #f0ead8; margin-bottom: 15px; display: flex; justify-content: space-between; }
 
-    /* Forms */
     .fg { margin-bottom: 15px; }
     label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
     input, select, textarea { width: 100%; background: #0d0d0f; border: 1px solid #2a2420; border-radius: 10px; padding: 12px; color: #fff; font-size: 16px; outline: none; }
     input:focus { border-color: #f59e0b; }
     .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    /* Buttons */
     .btn-primary { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #f59e0b; color: #0d0d0f; font-size: 16px; font-weight: 700; cursor: pointer; }
     .btn-sec { background: transparent; border: 1px solid #2a2420; color: #888; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
 
-    /* Shift Items */
     .shift-card { background: #13131a; border: 1px solid #2a2420; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; position: relative; }
     .shift-accent { width: 4px; background: #f59e0b; }
     .shift-body { flex: 1; padding: 15px; }
     .shift-top { display: flex; justify-content: space-between; align-items: flex-start; }
     .shift-amount { font-size: 18px; font-weight: bold; color: #f59e0b; }
     .shift-meta { font-size: 13px; color: #666; margin-top: 5px; }
-    .btn-del { position: absolute; left: 15px; bottom: 15px; background: none; border: none; color: #ef4444; font-size: 16px; opacity: 0.6; }
+    .btn-del { position: absolute; left: 15px; bottom: 15px; background: none; border: none; color: #ef4444; font-size: 16px; opacity: 0.6; cursor: pointer; }
 
-    /* Utilities */
     .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f59e0b; color: #000; padding: 10px 20px; border-radius: 10px; font-weight: bold; display: none; z-index: 1000; }
   </style>
 </head>
@@ -72,42 +65,38 @@
     <button class="nav-btn" id="btn-stats" onclick="setView('stats')">סטטיסטיקה</button>
   </nav>
 
-  <main id="main-content">
-    <!-- תוכן דינמי כאן -->
-  </main>
+  <main id="main-content"></main>
 
   <script>
     let shifts = JSON.parse(localStorage.getItem('sl_data')) || [];
     let currentView = 'list';
+    
+    // אובייקט זמני לשמירת נתוני הטופס מבלי לרנדר מחדש כל רגע
+    let tempForm = { job: '', date: new Date().toISOString().split('T')[0], start: '', end: '', total: '', tip: '' };
 
-    // פונקציה לחישוב שעות
     function calcHours(s, e) {
       if (!s || !e) return 0;
       let start = s.split(':').map(Number);
       let end = e.split(':').map(Number);
       let mins = (end[0] * 60 + end[1]) - (start[0] * 60 + start[1]);
-      if (mins < 0) mins += 1440; // מעבר חצות
+      if (mins < 0) mins += 1440;
       return (mins / 60).toFixed(2);
     }
 
     function setView(view) {
       currentView = view;
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      if(view !== 'add') document.getElementById('btn-' + view).classList.add('active');
+      const btn = document.getElementById('btn-' + view);
+      if(btn) btn.classList.add('active');
       render();
     }
 
     function render() {
       const main = document.getElementById('main-content');
       updateHeader();
-
-      if (currentView === 'list') {
-        renderList(main);
-      } else if (currentView === 'add') {
-        renderAdd(main);
-      } else if (currentView === 'stats') {
-        renderStats(main);
-      }
+      if (currentView === 'list') renderList(main);
+      else if (currentView === 'add') renderAdd(main);
+      else if (currentView === 'stats') renderStats(main);
     }
 
     function updateHeader() {
@@ -145,15 +134,15 @@
       el.innerHTML = `
         <div class="card">
           <div class="card-title">משמרת חדשה</div>
-          <div class="fg"><label>עבודה</label><input type="text" id="f-job" placeholder="למשל: מלצרות"></div>
-          <div class="fg"><label>תאריך</label><input type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
+          <div class="fg"><label>עבודה</label><input type="text" id="f-job" value="${tempForm.job}" onblur="tempForm.job=this.value"></div>
+          <div class="fg"><label>תאריך</label><input type="date" id="f-date" value="${tempForm.date}" onblur="tempForm.date=this.value"></div>
           <div class="r2">
-            <div class="fg"><label>כניסה</label><input type="time" id="f-start"></div>
-            <div class="fg"><label>יציאה</label><input type="time" id="f-end"></div>
+            <div class="fg"><label>כניסה</label><input type="time" id="f-start" value="${tempForm.start}" onblur="tempForm.start=this.value"></div>
+            <div class="fg"><label>יציאה</label><input type="time" id="f-end" value="${tempForm.end}" onblur="tempForm.end=this.value"></div>
           </div>
           <div class="r2">
-            <div class="fg"><label>שכר בסיס</label><input type="number" id="f-total" placeholder="0"></div>
-            <div class="fg"><label>טיפ</label><input type="number" id="f-tip" placeholder="0"></div>
+            <div class="fg"><label>שכר בסיס</label><input type="number" id="f-total" value="${tempForm.total}" onblur="tempForm.total=this.value"></div>
+            <div class="fg"><label>טיפ</label><input type="number" id="f-tip" value="${tempForm.tip}" onblur="tempForm.tip=this.value"></div>
           </div>
           <button class="btn-primary" onclick="saveShift()">שמור משמרת</button>
           <button class="btn-sec" onclick="setView('list')" style="width:100%; margin-top:10px;">ביטול</button>
@@ -167,30 +156,25 @@
       el.innerHTML = `
         <div class="card">
           <div class="card-title">סיכום רווחים</div>
-          <div class="fg" style="display:flex; justify-content:space-between;"><span>שכר בסיס:</span><span>₪${base}</span></div>
-          <div class="fg" style="display:flex; justify-content:space-between;"><span>טיפים:</span><span>₪${tips}</span></div>
+          <div class="fg" style="display:flex; justify-content:space-between;"><span>שכר בסיס:</span><span>₪${base.toLocaleString()}</span></div>
+          <div class="fg" style="display:flex; justify-content:space-between;"><span>טיפים:</span><span>₪${tips.toLocaleString()}</span></div>
           <hr style="border-color:#222; margin:10px 0;">
-          <div class="fg" style="display:flex; justify-content:space-between; font-weight:bold; color:#f59e0b;"><span>סה"כ נטו:</span><span>₪${base+tips}</span></div>
+          <div class="fg" style="display:flex; justify-content:space-between; font-weight:bold; color:#f59e0b;"><span>סה"כ נטו:</span><span>₪${(base+tips).toLocaleString()}</span></div>
         </div>
         <button class="btn-sec" onclick="exportCSV()" style="width:100%">📥 ייצוא ל-Excel (CSV)</button>
       `;
     }
 
     function saveShift() {
-      const shift = {
-        id: Date.now(),
-        job: document.getElementById('f-job').value || 'כללי',
-        date: document.getElementById('f-date').value,
-        start: document.getElementById('f-start').value,
-        end: document.getElementById('f-end').value,
-        total: document.getElementById('f-total').value || 0,
-        tip: document.getElementById('f-tip').value || 0
-      };
-
-      if(!shift.start || !shift.end) return alert('נא להזין שעות');
+      if(!tempForm.start || !tempForm.end) return alert('נא להזין שעות');
       
+      const shift = { id: Date.now(), ...tempForm };
       shifts.push(shift);
       localStorage.setItem('sl_data', JSON.stringify(shifts));
+      
+      // איפוס הטופס הזמני
+      tempForm = { job: '', date: new Date().toISOString().split('T')[0], start: '', end: '', total: '', tip: '' };
+      
       showToast();
       setView('list');
     }
@@ -211,9 +195,7 @@
 
     function exportCSV() {
       let csv = "תאריך,עבודה,כניסה,יציאה,שכר,טיפ\n";
-      shifts.forEach(s => {
-        csv += `${s.date},${s.job},${s.start},${s.end},${s.total},${s.tip}\n`;
-      });
+      shifts.forEach(s => { csv += `${s.date},${s.job},${s.start},${s.end},${s.total},${s.tip}\n`; });
       const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
