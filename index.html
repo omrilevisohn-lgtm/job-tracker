@@ -2,402 +2,250 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>⚡ ShiftLog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ShiftLog 2026</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0d0d0f; color: #e8e4dc; font-family: 'Segoe UI', system-ui, sans-serif; direction: rtl; min-height: 100vh; padding-bottom: 40px; }
-    button, input, textarea, select { font-family: inherit; }
-    input[type=date]::-webkit-calendar-picker-indicator,
-    input[type=time]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+    :root { --bg: #0d0d0f; --card: #13131a; --border: #2a2420; --accent: #f59e0b; --text: #e8e4dc; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; direction: rtl; min-height: 100vh; line-height: 1.5; }
+    
+    .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .logo { font-size: 22px; font-weight: 800; color: var(--accent); }
+    
+    .stats-main { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-box { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+    .stat-label { font-size: 12px; color: #888; display: block; }
+    .stat-val { font-size: 18px; font-weight: bold; color: var(--text); }
 
-    .header { background: linear-gradient(135deg,#13131a,#1a1612); border-bottom: 1px solid #2a2420; padding: 20px 16px 16px; }
-    .header-inner { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-end; }
-    .logo { font-size: 22px; font-weight: 800; color: #f59e0b; }
-    .logo-sub { font-size: 12px; color: #666; margin-top: 2px; }
-    .h-stats { display: flex; gap: 20px; }
-    .h-val { display: block; font-size: 18px; font-weight: 700; color: #f0ead8; }
-    .h-lbl { display: block; font-size: 11px; color: #666; margin-top: 1px; text-align: center; }
+    nav { display: flex; gap: 10px; margin-bottom: 20px; }
+    nav button { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: #888; cursor: pointer; font-weight: 600; }
+    nav button.active { background: var(--card); border-color: var(--accent); color: var(--accent); }
+    .btn-add { background: var(--accent) !important; color: #000 !important; border: none !important; }
 
-    nav { max-width: 520px; margin: 0 auto; display: flex; gap: 8px; padding: 12px 16px; }
-    .nav-btn { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid #2a2420; background: transparent; color: #888; font-size: 14px; cursor: pointer; }
-    .nav-btn.active { background: #1e1a14; border-color: #f59e0b44; color: #f0ead8; }
-    .nav-add { padding: 9px 18px; border-radius: 10px; border: none; background: #f59e0b; color: #0d0d0f; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+    .field { margin-bottom: 15px; }
+    label { display: block; font-size: 13px; color: #888; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 16px; outline: none; }
+    input:focus { border-color: var(--accent); }
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-save { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+    
+    .shift-item { background: var(--card); border-right: 4px solid var(--accent); border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .shift-info h4 { font-size: 16px; margin-bottom: 4px; }
+    .shift-info p { font-size: 13px; color: #888; }
+    .shift-price { text-align: left; }
+    .price-val { font-size: 18px; font-weight: bold; color: var(--accent); }
+    .btn-del { background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 5px; margin-right: 10px; }
 
-    main { max-width: 520px; margin: 0 auto; padding: 0 16px; }
-    .card { background: #13131a; border: 1px solid #2a2420; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-    .card-title { font-size: 18px; font-weight: 700; color: #f0ead8; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-
-    .fg { margin-bottom: 14px; }
-    label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
-    input[type=text], input[type=number], input[type=date], input[type=time], textarea {
-      width: 100%; background: #0d0d0f; border: 1px solid #2a2420; border-radius: 10px;
-      padding: 10px 12px; color: #e8e4dc; font-size: 15px; outline: none;
-    }
-    textarea { resize: vertical; }
-    .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .job-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-    .job-pill { padding: 8px 14px; border-radius: 10px; border: 1px solid #2a2420; background: transparent; color: #888; font-size: 14px; cursor: pointer; white-space: nowrap; }
-    .toggle-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .toggle { padding: 10px 0; border-radius: 10px; border: 1px solid #2a2420; background: transparent; color: #888; font-size: 14px; cursor: pointer; width: 100%; }
-    .toggle.on { border-color: #f59e0b44; background: #f59e0b18; color: #f0ead8; }
-    .btn-row { display: flex; gap: 10px; margin-top: 4px; }
-    .btn-primary { flex: 2; padding: 12px 0; border-radius: 10px; border: none; background: #f59e0b; color: #0d0d0f; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
-    .btn-sec { flex: 1; padding: 12px 0; border-radius: 10px; border: 1px solid #2a2420; background: transparent; color: #888; font-size: 15px; cursor: pointer; }
-    .mng-btn { padding: 7px 13px; border-radius: 8px; border: 1px solid #2a2420; background: transparent; color: #888; font-size: 13px; cursor: pointer; }
-
-    .preview { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-    .preview-item { flex: 1; min-width: 90px; background: #0d0d0f; border-radius: 8px; padding: 8px 10px; text-align: center; }
-    .preview-lbl { display: block; font-size: 11px; color: #555; margin-bottom: 3px; }
-    .preview-val { display: block; font-size: 15px; font-weight: 700; color: #f0ead8; }
-
-    .shift-card { background: #13131a; border: 1px solid #2a2420; border-radius: 14px; margin-bottom: 10px; display: flex; overflow: hidden; }
-    .shift-accent { width: 4px; flex-shrink: 0; }
-    .shift-body { flex: 1; padding: 12px 14px; }
-    .shift-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-    .shift-tag { font-size: 12px; padding: 2px 8px; border-radius: 6px; border: 1px solid; display: inline-block; margin-bottom: 4px; }
-    .shift-date { font-size: 13px; color: #888; }
-    .shift-amount { font-size: 20px; font-weight: 700; color: #f0ead8; }
-    .shift-travel { font-size: 11px; color: #3b82f6; }
-    .shift-meta { font-size: 13px; color: #666; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-    .shift-per-hour { font-size: 11px; color: #444; margin-top: 3px; }
-    .shift-notes { margin-top: 8px; font-size: 13px; color: #555; font-style: italic; border-top: 1px solid #1e1e26; padding-top: 8px; }
-    .shift-actions { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 10px; }
-    .act-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px; }
-
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-    .stat-card { background: #13131a; border: 1px solid #2a2420; border-radius: 14px; padding: 16px 14px; text-align: center; }
-    .stat-icon { font-size: 24px; margin-bottom: 6px; }
-    .stat-val { font-size: 20px; font-weight: 700; color: #f0ead8; margin-bottom: 4px; }
-    .stat-lbl { font-size: 12px; color: #666; }
-    .travel-stat { background: #13131a; border: 1px solid #3b82f633; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; color: #888; }
-    .sec-title { font-size: 15px; color: #888; font-weight: 600; margin-bottom: 16px; }
-    .job-stat-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e1e26; }
-    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .bar-label { width: 46px; font-size: 12px; color: #888; text-align: right; }
-    .bar-track { flex: 1; height: 18px; background: #1a1a1f; border-radius: 4px; overflow: hidden; }
-    .bar-fill { height: 100%; background: #f59e0b; border-radius: 4px; }
-    .bar-val { width: 72px; font-size: 12px; color: #c0b89a; text-align: left; }
-
-    .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1a1a1f; border: 1px solid #f59e0b44; color: #f59e0b; padding: 10px 24px; border-radius: 12px; z-index: 9999; font-size: 14px; box-shadow: 0 4px 20px #0008; white-space: nowrap; }
-
-    .overlay { position: fixed; inset: 0; background: #000a; z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
-    .modal { background: #13131a; border: 1px solid #2a2420; border-radius: 20px 20px 0 0; padding: 24px; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-title { font-size: 17px; font-weight: 700; color: #f0ead8; }
-    .close-btn { background: transparent; border: none; color: #666; font-size: 20px; cursor: pointer; }
-    .job-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e1e26; }
-    .del-mini { background: transparent; border: none; font-size: 16px; cursor: pointer; opacity: 0.5; }
-    .add-box { background: #0d0d0f; border-radius: 12px; padding: 14px; }
-    .icon-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    .icon-btn { background: #1a1a1f; border: 1px solid #2a2420; border-radius: 8px; font-size: 20px; padding: 6px 8px; cursor: pointer; }
-    .icon-btn.active { border-color: #f59e0b; background: #f59e0b22; }
-    .color-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-    .color-dot { width: 26px; height: 26px; border-radius: 50%; border: none; cursor: pointer; }
-    .empty { text-align: center; padding: 60px 20px; }
-    .top-bar { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .empty { text-align: center; padding: 40px; color: #555; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 100; display: none; }
   </style>
 </head>
 <body>
-  <div id="app"></div>
-  <script>
-    const JOB_COLORS = ["#f59e0b","#10b981","#3b82f6","#ec4899","#8b5cf6","#ef4444","#06b6d4","#f97316"];
-    const JOB_ICONS = ["🍽️","🍸","🚗","💼","🛒","🎯","🏗️","💻","🎨","🏥","📦","🎤"];
-    const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
-    const DEFAULT_JOBS = [
-      { id: "waiter", label: "מלצרות", icon: "🍽️", color: "#10b981" },
-      { id: "bar",    label: "בר",     icon: "🍸",  color: "#f59e0b" }
-    ];
 
-    const todayStr = () => new Date().toISOString().split("T")[0];
-    const fmt = n => new Intl.NumberFormat("he-IL",{style:"currency",currency:"ILS",maximumFractionDigits:0}).format(n||0);
-    const calcH = (s,e) => {
-      if (!s||!e) return 0;
-      const [sh,sm]=s.split(":").map(Number),[eh,em]=e.split(":").map(Number);
-      let m=eh*60+em-(sh*60+sm); if(m<0)m+=1440; return +(m/60).toFixed(2);
-    };
-    const load = (k,fb) => { try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch{return fb;} };
-    const save = (k,v) => { try{localStorage.setItem(k,JSON.stringify(v));}catch{} };
+<div class="container">
+  <header>
+    <div class="logo">⚡ ShiftLog</div>
+    <div id="top-total" style="font-weight: bold;">₪ 0</div>
+  </header>
 
-    let jobs   = load("sl_jobs",  DEFAULT_JOBS);
-    let shifts = load("sl_shifts", []);
-    let view   = "shifts", editId = null, toast = null, showJobMgr = false;
-    let newJobLabel = "", newJobIcon = "🍽️", newJobColor = JOB_COLORS[0];
-    const emptyForm = () => ({date:todayStr(),start:"",end:"",total:"",tip:"",travel:"",notes:"",jobType:jobs[0]?.id||"",payMode:"total"});
-    let form = emptyForm();
+  <div class="stats-main">
+    <div class="stat-box">
+      <span class="stat-label">הכנסה החודש</span>
+      <span class="stat-val" id="month-earn">₪ 0</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">משמרות החודש</span>
+      <span class="stat-val" id="month-count">0</span>
+    </div>
+  </div>
 
-    function render() {
-      const app = document.getElementById("app");
-      app.innerHTML = html();
-      bind();
+  <nav>
+    <button id="nav-list" class="active" onclick="showTab('list')">רשימה</button>
+    <button id="nav-add" class="btn-add" onclick="showTab('add')">+ משמרת</button>
+    <button id="nav-stats" onclick="showTab('stats')">סיכום</button>
+  </nav>
+
+  <div id="tab-list">
+    <div id="shifts-container"></div>
+  </div>
+
+  <div id="tab-add" style="display: none;">
+    <div class="card">
+      <div class="field">
+        <label>סוג עבודה</label>
+        <select id="f-job">
+          <option value="מלצרות">🍽️ מלצרות</option>
+          <option value="בר">🍸 בר</option>
+          <option value="אחר">💼 אחר</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>תאריך</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>כניסה</label>
+          <input type="time" id="f-start">
+        </div>
+        <div class="field">
+          <label>יציאה</label>
+          <input type="time" id="f-end">
+        </div>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>שכר לשעה / גלובלי</label>
+          <input type="number" id="f-pay" placeholder="0">
+        </div>
+        <div class="field">
+          <label>טיפים</label>
+          <input type="number" id="f-tip" placeholder="0">
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveShift()">שמור משמרת</button>
+    </div>
+  </div>
+
+  <div id="tab-stats" style="display: none;">
+    <div class="card">
+      <h3>סיכום כללי</h3>
+      <div id="stats-content"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">נשמר בהצלחה!</div>
+
+<script>
+  let shifts = JSON.parse(localStorage.getItem('shifts_v2')) || [];
+
+  function showTab(tab) {
+    document.getElementById('tab-list').style.display = tab === 'list' ? 'block' : 'none';
+    document.getElementById('tab-add').style.display = tab === 'add' ? 'block' : 'none';
+    document.getElementById('tab-stats').style.display = tab === 'stats' ? 'block' : 'none';
+    
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('nav-' + tab).classList.add('active');
+    
+    if(tab === 'list') renderShifts();
+    if(tab === 'stats') renderStats();
+  }
+
+  function saveShift() {
+    const job = document.getElementById('f-job').value;
+    const date = document.getElementById('f-date').value;
+    const start = document.getElementById('f-start').value;
+    const end = document.getElementById('f-end').value;
+    const pay = parseFloat(document.getElementById('f-pay').value) || 0;
+    const tip = parseFloat(document.getElementById('f-tip').value) || 0;
+
+    if(!date || !start || !end) {
+      alert("נא למלא תאריך ושעות");
+      return;
     }
 
-    function html() {
-      const earn = shifts.reduce((a,s)=>a+(parseFloat(s.total)||0),0);
-      const tips  = shifts.reduce((a,s)=>a+(parseFloat(s.tip)||0),0);
+    const newShift = { id: Date.now(), job, date, start, end, pay, tip };
+    shifts.push(newShift);
+    localStorage.setItem('shifts_v2', JSON.stringify(shifts));
+    
+    showToast();
+    resetForm();
+    updateMainStats();
+    showTab('list');
+  }
+
+  function resetForm() {
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('f-start').value = "";
+    document.getElementById('f-end').value = "";
+    document.getElementById('f-pay').value = "";
+    document.getElementById('f-tip').value = "";
+  }
+
+  function renderShifts() {
+    const container = document.getElementById('shifts-container');
+    if(shifts.length === 0) {
+      container.innerHTML = '<div class="empty">אין משמרות רשומות</div>';
+      return;
+    }
+
+    const sorted = [...shifts].sort((a,b) => new Date(b.date) - new Date(a.date));
+    container.innerHTML = sorted.map(s => {
+      const total = s.pay + s.tip;
       return `
-        ${toast?`<div class="toast">${toast}</div>`:""}
-        ${showJobMgr?modalHtml():""}
-        <header class="header"><div class="header-inner">
-          <div><div class="logo">⚡ ShiftLog</div><div class="logo-sub">מעקב משמרות</div></div>
-          <div class="h-stats">
-            <div><span class="h-val">${fmt(earn+tips)}</span><span class="h-lbl">סה״כ</span></div>
-            <div><span class="h-val">${shifts.length}</span><span class="h-lbl">משמרות</span></div>
+        <div class="shift-item">
+          <div class="shift-info">
+            <h4>${s.job}</h4>
+            <p>${s.date.split('-').reverse().join('/')} | ${s.start}-${s.end}</p>
           </div>
-        </div></header>
-        <nav>
-          <button class="nav-btn ${view==="shifts"||view==="add"?"active":""}" data-a="nav-shifts">📋 משמרות</button>
-          <button class="nav-btn ${view==="stats"?"active":""}" data-a="nav-stats">📊 סטטיסטיקות</button>
-          <button class="nav-add" data-a="nav-add">+ משמרת</button>
-        </nav>
-        <main>
-          ${view==="add"?formHtml():view==="shifts"?shiftsHtml():statsHtml()}
-        </main>`;
-    }
-
-    function formHtml() {
-      const lh = calcH(form.start,form.end);
-      const lt = form.payMode==="hourly"&&form.total&&lh>0 ? parseFloat(form.total)*lh : parseFloat(form.total)||0;
-      const tip = parseFloat(form.tip)||0;
-      const lph = lh>0?(lt+tip)/lh:0;
-      const prev = form.start&&form.end ? `<div class="preview">
-        <div class="preview-item"><span class="preview-lbl">שעות</span><span class="preview-val">${lh}</span></div>
-        ${lt>0?`<div class="preview-item"><span class="preview-lbl">${form.payMode==="hourly"?"סה״כ משוחשב":"סה״כ"}</span><span class="preview-val">${fmt(lt)}</span></div>`:""}
-        ${lh>0&&(lt+tip)>0?`<div class="preview-item"><span class="preview-lbl">לשעה (כולל טיפ)</span><span class="preview-val" style="color:#f59e0b">${fmt(lph)}</span></div>`:""}
-      </div>` : "";
-      return `<div class="card">
-        <div class="card-title"><span>${editId?"✏️ עריכת משמרת":"➕ משמרת חדשה"}</span><button class="mng-btn" data-a="open-mgr">⚙️ עבודות</button></div>
-        <div class="fg"><label>סוג עבודה</label><div class="job-pills">
-          ${jobs.map(j=>`<button class="job-pill" data-a="pick-job" data-id="${j.id}" style="${form.jobType===j.id?`border-color:${j.color};background:${j.color}22;color:${j.color}`:""}">${j.icon} ${j.label}</button>`).join("")}
-        </div></div>
-        <div class="fg"><label>תאריך</label><input type="date" id="f-date" value="${form.date}"></div>
-        <div class="r2">
-          <div class="fg"><label>שעת התחלה</label><input type="time" id="f-start" value="${form.start}"></div>
-          <div class="fg"><label>שעת סיום</label><input type="time" id="f-end" value="${form.end}"></div>
-        </div>
-        <div class="fg"><label>אופן תשלום</label><div class="toggle-row">
-          <button class="toggle ${form.payMode==="total"?"on":""}" data-a="pay-total">💰 סכום כולל</button>
-          <button class="toggle ${form.payMode==="hourly"?"on":""}" data-a="pay-hourly">⏱ לפי שעה</button>
-        </div></div>
-        <div class="r2">
-          <div class="fg"><label>${form.payMode==="hourly"?"💵 שכר לשעה (₪)":"💰 סה״כ (₪)"}</label><input type="number" id="f-total" placeholder="0" value="${form.total}"></div>
-          <div class="fg"><label>🤑 טיפ (₪)</label><input type="number" id="f-tip" placeholder="0" value="${form.tip}"></div>
-        </div>
-        <div class="fg"><label>🚗 נסיעות (₪)</label><input type="number" id="f-travel" placeholder="0" value="${form.travel}"></div>
-        ${prev}
-        <div class="fg"><label>📝 הערות</label><textarea id="f-notes" rows="2" placeholder="הערות חופשיות...">${form.notes}</textarea></div>
-        <div class="btn-row">
-          <button class="btn-sec" data-a="cancel">ביטול</button>
-          <button class="btn-primary" data-a="save">${editId?"עדכן":"שמור משמרת"}</button>
-        </div>
-      </div>`;
-    }
-
-    function shiftsHtml() {
-      const sorted = [...shifts].sort((a,b)=>b.date.localeCompare(a.date));
-      return `<div class="top-bar">
-          <button class="mng-btn" data-a="open-mgr">⚙️ ניהול עבודות</button>
-          ${shifts.length>0?`<button class="mng-btn" data-a="export">📥 ייצוא CSV</button>`:""}
-        </div>
-        ${sorted.length===0?`<div class="empty"><div style="font-size:48px;margin-bottom:12px">🍽️</div><div style="font-size:18px;color:#666;margin-bottom:6px">אין משמרות עדיין</div><div style="font-size:14px;color:#444">לחץ על "+ משמרת" כדי להתחיל</div></div>`
-        :sorted.map(s=>{
-          const job=jobs.find(j=>j.id===s.jobType);
-          const h=calcH(s.start,s.end),total=parseFloat(s.total)||0,tip=parseFloat(s.tip)||0,travel=parseFloat(s.travel)||0;
-          const perH=h>0?(total+tip)/h:0, color=job?.color||"#666";
-          const dateStr=new Date(s.date+"T12:00:00").toLocaleDateString("he-IL",{weekday:"short",day:"numeric",month:"short"});
-          return `<div class="shift-card">
-            <div class="shift-accent" style="background:${color}"></div>
-            <div class="shift-body">
-              <div class="shift-top">
-                <div>
-                  <span class="shift-tag" style="color:${color};border-color:${color}44;background:${color}11">${job?.icon||""} ${job?.label||s.jobType}</span>
-                  <div class="shift-date">${dateStr}</div>
-                </div>
-                <div style="text-align:left">
-                  <div class="shift-amount">${fmt(total+tip)}</div>
-                  ${travel>0?`<div class="shift-travel">+${fmt(travel)} נסיעות</div>`:""}
-                </div>
-              </div>
-              <div class="shift-meta">
-                <span>🕐 ${s.start}–${s.end}</span><span style="color:#333">·</span><span>${h} שע׳</span>
-                ${tip>0?`<span style="color:#333">·</span><span style="color:#f59e0b;font-weight:600">טיפ ${fmt(tip)}</span>`:""}
-              </div>
-              ${h>0&&(total+tip)>0?`<div class="shift-per-hour">${fmt(perH)} לשעה (כולל טיפ)</div>`:""}
-              ${s.notes?`<div class="shift-notes">${s.notes}</div>`:""}
+          <div style="display:flex; align-items:center;">
+            <div class="shift-price">
+              <div class="price-val">₪${total}</div>
             </div>
-            <div class="shift-actions">
-              <button class="act-btn" data-a="edit" data-id="${s.id}">✏️</button>
-              <button class="act-btn" style="opacity:0.5" data-a="del" data-id="${s.id}">🗑️</button>
-            </div>
-          </div>`;
-        }).join("")}`;
-    }
-
-    function statsHtml() {
-      const earn=shifts.reduce((a,s)=>a+(parseFloat(s.total)||0),0);
-      const tips=shifts.reduce((a,s)=>a+(parseFloat(s.tip)||0),0);
-      const travel=shifts.reduce((a,s)=>a+(parseFloat(s.travel)||0),0);
-      const hours=shifts.reduce((a,s)=>a+calcH(s.start,s.end),0);
-      const byMonth={},byJob={};
-      shifts.forEach(s=>{
-        const mk=s.date.slice(0,7);
-        if(!byMonth[mk])byMonth[mk]={e:0,t:0,h:0,c:0};
-        byMonth[mk].e+=parseFloat(s.total)||0; byMonth[mk].t+=parseFloat(s.tip)||0;
-        byMonth[mk].h+=calcH(s.start,s.end); byMonth[mk].c++;
-        if(!byJob[s.jobType])byJob[s.jobType]={e:0,t:0,h:0,c:0};
-        byJob[s.jobType].e+=parseFloat(s.total)||0; byJob[s.jobType].t+=parseFloat(s.tip)||0;
-        byJob[s.jobType].h+=calcH(s.start,s.end); byJob[s.jobType].c++;
-      });
-      const mks=Object.keys(byMonth).sort((a,b)=>b.localeCompare(a));
-      const maxE=Math.max(...mks.map(k=>byMonth[k].e+byMonth[k].t),1);
-      if(!shifts.length) return `<div class="empty"><div style="font-size:48px;margin-bottom:12px">📊</div><div style="font-size:18px;color:#666">אין נתונים עדיין</div></div>`;
-      return `
-        <div class="stats-grid">
-          ${[["💵","סה״כ הכנסות",fmt(earn)],["🤑","סה״כ טיפים",fmt(tips)],["⏱","סה״כ שעות",hours.toFixed(1)],["📈","שכר לשעה",hours>0?fmt((earn+tips)/hours):"—"]].map(([ic,lb,vl])=>
-            `<div class="stat-card"><div class="stat-icon">${ic}</div><div class="stat-val">${vl}</div><div class="stat-lbl">${lb}</div></div>`).join("")}
-        </div>
-        ${travel>0?`<div class="travel-stat">🚗 סה״כ נסיעות: <strong>${fmt(travel)}</strong></div>`:""}
-        <div class="card"><div class="sec-title">לפי סוג עבודה</div>
-          ${jobs.map(j=>{const d=byJob[j.id];if(!d||!d.c)return"";const ph=d.h>0?(d.e+d.t)/d.h:0;return`
-            <div class="job-stat-row">
-              <span style="font-size:18px">${j.icon}</span>
-              <div style="flex:1"><div style="color:${j.color};font-weight:600;font-size:14px">${j.label}</div>
-              <div style="color:#555;font-size:12px">${d.c} משמרות · ${d.h.toFixed(1)} שע׳${ph>0?` · ${fmt(ph)}/שע׳`:""}</div></div>
-              <span style="color:${j.color};font-size:16px;font-weight:700">${fmt(d.e+d.t)}</span>
-            </div>`;}).join("")}
-        </div>
-        ${mks.length?`<div class="card"><div class="sec-title">הכנסה חודשית</div>
-          ${mks.slice(0,6).map(k=>{const d=byMonth[k],mo=k.split("-")[1],tot=d.e+d.t;return`
-            <div class="bar-row">
-              <div class="bar-label">${MONTHS_HE[parseInt(mo)-1]}</div>
-              <div class="bar-track"><div class="bar-fill" style="width:${tot/maxE*100}%"></div></div>
-              <div class="bar-val">${fmt(tot)}</div>
-            </div>`;}).join("")}
-        </div>`:""}`;
-    }
-
-    function modalHtml() {
-      return `<div class="overlay" id="ovr">
-        <div class="modal" id="mdl">
-          <div class="modal-head"><span class="modal-title">⚙️ ניהול עבודות</span><button class="close-btn" data-a="close-mgr">✕</button></div>
-          <div style="margin-bottom:20px">
-            ${jobs.map(j=>`<div class="job-row">
-              <span style="font-size:20px">${j.icon}</span>
-              <span style="flex:1;color:${j.color};font-weight:600;font-size:15px">${j.label}</span>
-              <button class="del-mini" data-a="del-job" data-id="${j.id}">🗑️</button>
-            </div>`).join("")}
-          </div>
-          <div class="add-box">
-            <div style="font-size:12px;color:#888;margin-bottom:8px">+ הוספת עבודה חדשה</div>
-            <input type="text" id="nj-label" placeholder="שם העבודה..." value="${newJobLabel}" style="margin-bottom:10px">
-            <div style="font-size:12px;color:#666;margin-bottom:6px">אייקון</div>
-            <div class="icon-grid">${JOB_ICONS.map(ic=>`<button class="icon-btn${newJobIcon===ic?" active":""}" data-a="pick-icon" data-icon="${ic}">${ic}</button>`).join("")}</div>
-            <div style="font-size:12px;color:#666;margin:10px 0 6px">צבע</div>
-            <div class="color-grid">${JOB_COLORS.map(c=>`<button class="color-dot" data-a="pick-color" data-color="${c}" style="background:${c};${newJobColor===c?"outline:2px solid #fff;outline-offset:2px":""}"></button>`).join("")}</div>
-            <button class="btn-primary" data-a="add-job" style="margin-top:4px">הוסף עבודה</button>
+            <button class="btn-del" onclick="deleteShift(${s.id})">🗑️</button>
           </div>
         </div>
-      </div>`;
+      `;
+    }).join('');
+  }
+
+  function deleteShift(id) {
+    if(confirm("למחוק את המשמרת?")) {
+      shifts = shifts.filter(s => s.id !== id);
+      localStorage.setItem('shifts_v2', JSON.stringify(shifts));
+      renderShifts();
+      updateMainStats();
     }
+  }
 
-    function bind() {
-      const inputs = {
-        "f-date":"date","f-start":"start","f-end":"end",
-        "f-total":"total","f-tip":"tip","f-travel":"travel","f-notes":"notes"
-      };
+  function updateMainStats() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-      Object.entries(inputs).forEach(([id, key]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener("blur", e => {
-          form[key] = e.target.value;
-          render();
-        });
-      });
+    const monthShifts = shifts.filter(s => {
+      const d = new Date(s.date);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
 
-      const ovr = document.getElementById("ovr");
-      if (ovr) {
-        ovr.addEventListener("click", e => { if(e.target===ovr){showJobMgr=false;render();} });
-        const mdl = document.getElementById("mdl");
-        if (mdl) mdl.addEventListener("click", e => e.stopPropagation());
-      }
+    const totalEarn = monthShifts.reduce((sum, s) => sum + (s.pay + s.tip), 0);
+    const allTimeTotal = shifts.reduce((sum, s) => sum + (s.pay + s.tip), 0);
 
-      document.getElementById("app").onclick = (e) => {
-        const btn = e.target.closest("[data-a]");
-        if (!btn) return;
-        const a = btn.dataset.a, id = btn.dataset.id;
-        if (a==="nav-shifts")      { view="shifts"; render(); }
-        else if (a==="nav-stats") { view="stats";  render(); }
-        else if (a==="nav-add")   { form=emptyForm(); editId=null; view="add"; render(); }
-        else if (a==="open-mgr")  { showJobMgr=true; render(); }
-        else if (a==="close-mgr") { showJobMgr=false; render(); }
-        else if (a==="cancel")    { view="shifts"; form=emptyForm(); editId=null; render(); }
-        else if (a==="pay-total") { form.payMode="total"; render(); }
-        else if (a==="pay-hourly"){ form.payMode="hourly"; render(); }
-        else if (a==="pick-job")  { form.jobType=id; render(); }
-        else if (a==="pick-icon") { newJobIcon=btn.dataset.icon; render(); }
-        else if (a==="pick-color"){ newJobColor=btn.dataset.color; render(); }
-        else if (a==="save")      { doSave(); }
-        else if (a==="edit")      { doEdit(id); }
-        else if (a==="del")       { doDel(id); }
-        else if (a==="del-job")   { doDelJob(id); }
-        else if (a==="add-job")   { doAddJob(); }
-        else if (a==="export")    { doExport(); }
-      };
-    }
+    document.getElementById('month-earn').innerText = '₪ ' + totalEarn;
+    document.getElementById('month-count').innerText = monthShifts.length;
+    document.getElementById('top-total').innerText = '₪ ' + allTimeTotal;
+  }
 
-    function showToast(msg) {
-      toast=msg; render();
-      setTimeout(()=>{toast=null;render();},2500);
-    }
+  function renderStats() {
+    const statsContent = document.getElementById('stats-content');
+    const totalPay = shifts.reduce((sum, s) => sum + s.pay, 0);
+    const totalTips = shifts.reduce((sum, s) => sum + s.tip, 0);
+    
+    statsContent.innerHTML = `
+      <div style="margin-top:10px;">
+        <p>סה"כ שכר בסיס: ₪${totalPay}</p>
+        <p>סה"כ טיפים: ₪${totalTips}</p>
+        <hr style="margin:10px 0; border:0; border-top:1px solid #222;">
+        <p style="font-size:20px; color:var(--accent);">סה"כ הכל: ₪${totalPay + totalTips}</p>
+      </div>
+    `;
+  }
 
-    function doSave() {
-      if (!form.start||!form.end){ showToast("נא להזין שעת התחלה וסיום"); return; }
-      let total = form.total;
-      if (form.payMode==="hourly"&&form.total) total=(parseFloat(form.total)*calcH(form.start,form.end)).toFixed(2);
-      const data = {...form, total, id: editId||Date.now()};
-      shifts = editId ? shifts.map(s=>s.id==editId?data:s) : [data,...shifts];
-      save("sl_shifts",shifts);
-      showToast(editId?"משמרת עודכנה ✓":"משמרת נוספה ✓");
-      editId=null; form=emptyForm(); view="shifts"; render();
-    }
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+  }
 
-    function doEdit(id) {
-      const s=shifts.find(s=>s.id==id); if(!s)return;
-      form={...s,payMode:s.payMode||"total"}; editId=s.id; view="add"; render();
-    }
+  // אתחול
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  updateMainStats();
+  renderShifts();
+</script>
 
-    function doDel(id) {
-      if(confirm("למחוק משמרת זו?")) {
-        shifts=shifts.filter(s=>s.id!=id); save("sl_shifts",shifts); showToast("משמרת נמחקה");
-      }
-    }
-
-    function doAddJob() {
-      const label=(document.getElementById("nj-label")?.value||"").trim();
-      if(!label){showToast("נא להזין שם עבודה");return;}
-      jobs=[...jobs,{id:"j"+Date.now(),label,icon:newJobIcon,color:newJobColor}];
-      save("sl_jobs",jobs); newJobLabel=""; newJobIcon="🍽️"; newJobColor=JOB_COLORS[0];
-      showToast("עבודה נוספה ✓");
-    }
-
-    function doDelJob(id) {
-      if(jobs.length<=1){showToast("חייב להישאר לפחות סוג עבודה אחד");return;}
-      jobs=jobs.filter(j=>j.id!==id); save("sl_jobs",jobs); showToast("עבודה נמחקה");
-    }
-
-    function doExport() {
-      const hdr = "תאריך,סוג עבודה,שעת התחלה,שעת סיום,שעות,סהכ,טיפ,נסיעות,הערות";
-      const rows = shifts.map(s=>{
-        const job=jobs.find(j=>j.id===s.jobType);
-        return [s.date,job?.label||s.jobType,s.start,s.end,calcH(s.start,s.end),s.total,s.tip||0,s.travel||0,'"'+(s.notes||"")+'"'].join(",");
-      });
-      const blob=new Blob(["\uFEFF"+[hdr,...rows].join("\n")],{type:"text/csv;charset=utf-8;"});
-      const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="משמרות.csv"; a.click();
-      showToast("קובץ CSV יוצא ✓");
-    }
-
-    render();
-  </script>
 </body>
 </html>
