@@ -3,207 +3,250 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>⚡ ShiftLog Premium</title>
+  <title>ShiftLog 2026</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0d0d0f; color: #e8e4dc; font-family: 'Segoe UI', system-ui, sans-serif; direction: rtl; min-height: 100vh; padding-bottom: 40px; }
+    :root { --bg: #0d0d0f; --card: #13131a; --border: #2a2420; --accent: #f59e0b; --text: #e8e4dc; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; direction: rtl; min-height: 100vh; line-height: 1.5; }
     
-    .header { background: linear-gradient(135deg,#13131a,#1a1612); border-bottom: 1px solid #2a2420; padding: 20px 16px; }
-    .header-inner { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 22px; font-weight: 800; color: #f59e0b; }
-    .h-stats { display: flex; gap: 15px; }
-    .h-item { text-align: center; }
-    .h-val { display: block; font-size: 18px; font-weight: 700; color: #f0ead8; }
-    .h-lbl { font-size: 11px; color: #666; }
+    .container { max-width: 500px; margin: 0 auto; padding: 15px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .logo { font-size: 22px; font-weight: 800; color: var(--accent); }
+    
+    .stats-main { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-box { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+    .stat-label { font-size: 12px; color: #888; display: block; }
+    .stat-val { font-size: 18px; font-weight: bold; color: var(--text); }
 
-    nav { max-width: 520px; margin: 0 auto; display: flex; gap: 8px; padding: 12px 16px; }
-    .nav-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #2a2420; background: transparent; color: #888; font-weight: 600; cursor: pointer; }
-    .nav-btn.active { background: #1e1a14; border-color: #f59e0b44; color: #f0ead8; }
-    .nav-add { background: #f59e0b !important; color: #0d0d0f !important; border: none !important; }
+    nav { display: flex; gap: 10px; margin-bottom: 20px; }
+    nav button { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: #888; cursor: pointer; font-weight: 600; }
+    nav button.active { background: var(--card); border-color: var(--accent); color: var(--accent); }
+    .btn-add { background: var(--accent) !important; color: #000 !important; border: none !important; }
 
-    main { max-width: 520px; margin: 0 auto; padding: 0 16px; }
-    .card { background: #13131a; border: 1px solid #2a2420; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-    .card-title { font-size: 18px; font-weight: 700; color: #f0ead8; margin-bottom: 15px; display: flex; justify-content: space-between; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+    .field { margin-bottom: 15px; }
+    label { display: block; font-size: 13px; color: #888; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 16px; outline: none; }
+    input:focus { border-color: var(--accent); }
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-save { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+    
+    .shift-item { background: var(--card); border-right: 4px solid var(--accent); border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .shift-info h4 { font-size: 16px; margin-bottom: 4px; }
+    .shift-info p { font-size: 13px; color: #888; }
+    .shift-price { text-align: left; }
+    .price-val { font-size: 18px; font-weight: bold; color: var(--accent); }
+    .btn-del { background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 5px; margin-right: 10px; }
 
-    .fg { margin-bottom: 15px; }
-    label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
-    input, select, textarea { width: 100%; background: #0d0d0f; border: 1px solid #2a2420; border-radius: 10px; padding: 12px; color: #fff; font-size: 16px; outline: none; }
-    input:focus { border-color: #f59e0b; }
-    .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    .btn-primary { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #f59e0b; color: #0d0d0f; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .btn-sec { background: transparent; border: 1px solid #2a2420; color: #888; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
-
-    .shift-card { background: #13131a; border: 1px solid #2a2420; border-radius: 14px; margin-bottom: 12px; display: flex; overflow: hidden; position: relative; }
-    .shift-accent { width: 4px; background: #f59e0b; }
-    .shift-body { flex: 1; padding: 15px; }
-    .shift-top { display: flex; justify-content: space-between; align-items: flex-start; }
-    .shift-amount { font-size: 18px; font-weight: bold; color: #f59e0b; }
-    .shift-meta { font-size: 13px; color: #666; margin-top: 5px; }
-    .btn-del { position: absolute; left: 15px; bottom: 15px; background: none; border: none; color: #ef4444; font-size: 16px; opacity: 0.6; cursor: pointer; }
-
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #f59e0b; color: #000; padding: 10px 20px; border-radius: 10px; font-weight: bold; display: none; z-index: 1000; }
+    .empty { text-align: center; padding: 40px; color: #555; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 100; display: none; }
   </style>
 </head>
 <body>
 
-  <div id="toast" class="toast">נשמר בהצלחה!</div>
-
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">⚡ ShiftLog</div>
-      <div class="h-stats">
-        <div class="h-item"><span class="h-val" id="stat-total">₪ 0</span><span class="h-lbl">סה"כ</span></div>
-        <div class="h-item"><span class="h-val" id="stat-count">0</span><span class="h-lbl">משמרות</span></div>
-      </div>
-    </div>
+<div class="container">
+  <header>
+    <div class="logo">⚡ ShiftLog</div>
+    <div id="top-total" style="font-weight: bold;">₪ 0</div>
   </header>
 
+  <div class="stats-main">
+    <div class="stat-box">
+      <span class="stat-label">הכנסה החודש</span>
+      <span class="stat-val" id="month-earn">₪ 0</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">משמרות החודש</span>
+      <span class="stat-val" id="month-count">0</span>
+    </div>
+  </div>
+
   <nav>
-    <button class="nav-btn active" id="btn-list" onclick="setView('list')">משמרות</button>
-    <button class="nav-btn nav-add" onclick="setView('add')">+ חדשה</button>
-    <button class="nav-btn" id="btn-stats" onclick="setView('stats')">סטטיסטיקה</button>
+    <button id="nav-list" class="active" onclick="showTab('list')">רשימה</button>
+    <button id="nav-add" class="btn-add" onclick="showTab('add')">+ משמרת</button>
+    <button id="nav-stats" onclick="showTab('stats')">סיכום</button>
   </nav>
 
-  <main id="main-content"></main>
+  <div id="tab-list">
+    <div id="shifts-container"></div>
+  </div>
 
-  <script>
-    let shifts = JSON.parse(localStorage.getItem('sl_data')) || [];
-    let currentView = 'list';
+  <div id="tab-add" style="display: none;">
+    <div class="card">
+      <div class="field">
+        <label>סוג עבודה</label>
+        <select id="f-job">
+          <option value="מלצרות">🍽️ מלצרות</option>
+          <option value="בר">🍸 בר</option>
+          <option value="אחר">💼 אחר</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>תאריך</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>כניסה</label>
+          <input type="time" id="f-start">
+        </div>
+        <div class="field">
+          <label>יציאה</label>
+          <input type="time" id="f-end">
+        </div>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label>שכר לשעה / גלובלי</label>
+          <input type="number" id="f-pay" placeholder="0">
+        </div>
+        <div class="field">
+          <label>טיפים</label>
+          <input type="number" id="f-tip" placeholder="0">
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveShift()">שמור משמרת</button>
+    </div>
+  </div>
+
+  <div id="tab-stats" style="display: none;">
+    <div class="card">
+      <h3>סיכום כללי</h3>
+      <div id="stats-content"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">נשמר בהצלחה!</div>
+
+<script>
+  // שימוש בשם המקורי shifts_v2 כדי לשמור על הנתונים שלך
+  let shifts = JSON.parse(localStorage.getItem('shifts_v2')) || [];
+
+  function showTab(tab) {
+    document.getElementById('tab-list').style.display = tab === 'list' ? 'block' : 'none';
+    document.getElementById('tab-add').style.display = tab === 'add' ? 'block' : 'none';
+    document.getElementById('tab-stats').style.display = tab === 'stats' ? 'block' : 'none';
     
-    // אובייקט זמני לשמירת נתוני הטופס מבלי לרנדר מחדש כל רגע
-    let tempForm = { job: '', date: new Date().toISOString().split('T')[0], start: '', end: '', total: '', tip: '' };
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('nav-' + tab).classList.add('active');
+    
+    if(tab === 'list') renderShifts();
+    if(tab === 'stats') renderStats();
+  }
 
-    function calcHours(s, e) {
-      if (!s || !e) return 0;
-      let start = s.split(':').map(Number);
-      let end = e.split(':').map(Number);
-      let mins = (end[0] * 60 + end[1]) - (start[0] * 60 + start[1]);
-      if (mins < 0) mins += 1440;
-      return (mins / 60).toFixed(2);
+  function saveShift() {
+    const job = document.getElementById('f-job').value;
+    const date = document.getElementById('f-date').value;
+    const start = document.getElementById('f-start').value;
+    const end = document.getElementById('f-end').value;
+    const pay = parseFloat(document.getElementById('f-pay').value) || 0;
+    const tip = parseFloat(document.getElementById('f-tip').value) || 0;
+
+    if(!date || !start || !end) {
+      alert("נא למלא תאריך ושעות");
+      return;
     }
 
-    function setView(view) {
-      currentView = view;
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      const btn = document.getElementById('btn-' + view);
-      if(btn) btn.classList.add('active');
-      render();
+    const newShift = { id: Date.now(), job, date, start, end, pay, tip };
+    shifts.push(newShift);
+    localStorage.setItem('shifts_v2', JSON.stringify(shifts));
+    
+    showToast();
+    resetForm();
+    updateMainStats();
+    showTab('list');
+  }
+
+  function resetForm() {
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('f-start').value = "";
+    document.getElementById('f-end').value = "";
+    document.getElementById('f-pay').value = "";
+    document.getElementById('f-tip').value = "";
+  }
+
+  function renderShifts() {
+    const container = document.getElementById('shifts-container');
+    if(shifts.length === 0) {
+      container.innerHTML = '<div class="empty">אין משמרות רשומות</div>';
+      return;
     }
 
-    function render() {
-      const main = document.getElementById('main-content');
-      updateHeader();
-      if (currentView === 'list') renderList(main);
-      else if (currentView === 'add') renderAdd(main);
-      else if (currentView === 'stats') renderStats(main);
-    }
-
-    function updateHeader() {
-      const total = shifts.reduce((sum, s) => sum + (parseFloat(s.total) || 0) + (parseFloat(s.tip) || 0), 0);
-      document.getElementById('stat-total').innerText = '₪' + total.toLocaleString();
-      document.getElementById('stat-count').innerText = shifts.length;
-    }
-
-    function renderList(el) {
-      if (shifts.length === 0) {
-        el.innerHTML = '<div style="text-align:center; padding:50px; color:#444;">אין משמרות עדיין</div>';
-        return;
-      }
-      const sorted = [...shifts].sort((a,b) => new Date(b.date) - new Date(a.date));
-      el.innerHTML = sorted.map(s => `
-        <div class="shift-card">
-          <div class="shift-accent"></div>
-          <div class="shift-body">
-            <div class="shift-top">
-              <div>
-                <strong style="color:#f0ead8">${s.job}</strong>
-                <div style="font-size:12px; color:#666;">${s.date.split('-').reverse().join('.')}</div>
-              </div>
-              <div class="shift-amount">₪${(parseFloat(s.total) + (parseFloat(s.tip) || 0)).toLocaleString()}</div>
+    const sorted = [...shifts].sort((a,b) => new Date(b.date) - new Date(a.date));
+    container.innerHTML = sorted.map(s => {
+      const total = s.pay + s.tip;
+      return `
+        <div class="shift-item">
+          <div class="shift-info">
+            <h4>${s.job}</h4>
+            <p>${s.date.split('-').reverse().join('/')} | ${s.start}-${s.end}</p>
+          </div>
+          <div style="display:flex; align-items:center;">
+            <div class="shift-price">
+              <div class="price-val">₪${total}</div>
             </div>
-            <div class="shift-meta">🕐 ${s.start} - ${s.end} (${calcHours(s.start, s.end)} שעות)</div>
-            ${s.tip > 0 ? `<div style="font-size:12px; color:#f59e0b;">🤑 טיפ: ₪${s.tip}</div>` : ''}
             <button class="btn-del" onclick="deleteShift(${s.id})">🗑️</button>
           </div>
         </div>
-      `).join('');
-    }
-
-    function renderAdd(el) {
-      el.innerHTML = `
-        <div class="card">
-          <div class="card-title">משמרת חדשה</div>
-          <div class="fg"><label>עבודה</label><input type="text" id="f-job" value="${tempForm.job}" onblur="tempForm.job=this.value"></div>
-          <div class="fg"><label>תאריך</label><input type="date" id="f-date" value="${tempForm.date}" onblur="tempForm.date=this.value"></div>
-          <div class="r2">
-            <div class="fg"><label>כניסה</label><input type="time" id="f-start" value="${tempForm.start}" onblur="tempForm.start=this.value"></div>
-            <div class="fg"><label>יציאה</label><input type="time" id="f-end" value="${tempForm.end}" onblur="tempForm.end=this.value"></div>
-          </div>
-          <div class="r2">
-            <div class="fg"><label>שכר בסיס</label><input type="number" id="f-total" value="${tempForm.total}" onblur="tempForm.total=this.value"></div>
-            <div class="fg"><label>טיפ</label><input type="number" id="f-tip" value="${tempForm.tip}" onblur="tempForm.tip=this.value"></div>
-          </div>
-          <button class="btn-primary" onclick="saveShift()">שמור משמרת</button>
-          <button class="btn-sec" onclick="setView('list')" style="width:100%; margin-top:10px;">ביטול</button>
-        </div>
       `;
-    }
+    }).join('');
+  }
 
-    function renderStats(el) {
-      const tips = shifts.reduce((a,s) => a + (parseFloat(s.tip)||0), 0);
-      const base = shifts.reduce((a,s) => a + (parseFloat(s.total)||0), 0);
-      el.innerHTML = `
-        <div class="card">
-          <div class="card-title">סיכום רווחים</div>
-          <div class="fg" style="display:flex; justify-content:space-between;"><span>שכר בסיס:</span><span>₪${base.toLocaleString()}</span></div>
-          <div class="fg" style="display:flex; justify-content:space-between;"><span>טיפים:</span><span>₪${tips.toLocaleString()}</span></div>
-          <hr style="border-color:#222; margin:10px 0;">
-          <div class="fg" style="display:flex; justify-content:space-between; font-weight:bold; color:#f59e0b;"><span>סה"כ נטו:</span><span>₪${(base+tips).toLocaleString()}</span></div>
-        </div>
-        <button class="btn-sec" onclick="exportCSV()" style="width:100%">📥 ייצוא ל-Excel (CSV)</button>
-      `;
+  function deleteShift(id) {
+    if(confirm("למחוק את המשמרת?")) {
+      shifts = shifts.filter(s => s.id !== id);
+      localStorage.setItem('shifts_v2', JSON.stringify(shifts));
+      renderShifts();
+      updateMainStats();
     }
+  }
 
-    function saveShift() {
-      if(!tempForm.start || !tempForm.end) return alert('נא להזין שעות');
-      
-      const shift = { id: Date.now(), ...tempForm };
-      shifts.push(shift);
-      localStorage.setItem('sl_data', JSON.stringify(shifts));
-      
-      // איפוס הטופס הזמני
-      tempForm = { job: '', date: new Date().toISOString().split('T')[0], start: '', end: '', total: '', tip: '' };
-      
-      showToast();
-      setView('list');
-    }
+  function updateMainStats() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-    function deleteShift(id) {
-      if(confirm('למחוק משמרת זו?')) {
-        shifts = shifts.filter(s => s.id !== id);
-        localStorage.setItem('sl_data', JSON.stringify(shifts));
-        render();
-      }
-    }
+    const monthShifts = shifts.filter(s => {
+      const d = new Date(s.date);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
 
-    function showToast() {
-      const t = document.getElementById('toast');
-      t.style.display = 'block';
-      setTimeout(() => t.style.display = 'none', 2000);
-    }
+    const totalEarn = monthShifts.reduce((sum, s) => sum + (s.pay + s.tip), 0);
+    const allTimeTotal = shifts.reduce((sum, s) => sum + (s.pay + s.tip), 0);
 
-    function exportCSV() {
-      let csv = "תאריך,עבודה,כניסה,יציאה,שכר,טיפ\n";
-      shifts.forEach(s => { csv += `${s.date},${s.job},${s.start},${s.end},${s.total},${s.tip}\n`; });
-      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "shifts.csv";
-      link.click();
-    }
+    document.getElementById('month-earn').innerText = '₪ ' + totalEarn;
+    document.getElementById('month-count').innerText = monthShifts.length;
+    document.getElementById('top-total').innerText = '₪ ' + allTimeTotal;
+  }
 
-    render();
-  </script>
+  function renderStats() {
+    const statsContent = document.getElementById('stats-content');
+    const totalPay = shifts.reduce((sum, s) => sum + s.pay, 0);
+    const totalTips = shifts.reduce((sum, s) => sum + s.tip, 0);
+    
+    statsContent.innerHTML = `
+      <div style="margin-top:10px;">
+        <p>סה"כ שכר בסיס: ₪${totalPay}</p>
+        <p>סה"כ טיפים: ₪${totalTips}</p>
+        <hr style="margin:10px 0; border:0; border-top:1px solid #222;">
+        <p style="font-size:20px; color:var(--accent);">סה"כ הכל: ₪${totalPay + totalTips}</p>
+      </div>
+    `;
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+  }
+
+  // אתחול
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  updateMainStats();
+  renderShifts();
+</script>
+
 </body>
 </html>
