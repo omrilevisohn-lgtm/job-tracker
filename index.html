@@ -300,25 +300,54 @@
       </div>`;
     }
 
-    function bind() {
-      // input listeners for live preview
-      const inputs = {
-        "f-date":"date","f-start":"start","f-end":"end",
-        "f-total":"total","f-tip":"tip","f-travel":"travel","f-notes":"notes"
-      };
-      Object.entries(inputs).forEach(([id,key]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener("input", e => {
-          const sel = el.selectionStart;
-          form[key] = e.target.value;
-          render();
-          const next = document.getElementById(id);
-          if (next && next.type !== "date" && next.type !== "time") {
-            try { next.setSelectionRange(sel,sel); } catch(e){}
-          }
-        });
-      });
+ function bind() {
+  const inputs = {
+    "f-date":"date","f-start":"start","f-end":"end",
+    "f-total":"total","f-tip":"tip","f-travel":"travel","f-notes":"notes"
+  };
+
+  Object.entries(inputs).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    // כאן השינוי: משתמשים ב-blur במקום ב-input כדי שהמקלדת לא תקפוץ
+    el.addEventListener("blur", e => {
+      form[key] = e.target.value;
+      render();
+    });
+  });
+
+  // כל שאר הפונקציה (הלחיצות על הכפתורים והתפריטים) נשארת אותו דבר
+  const ovr = document.getElementById("ovr");
+  if (ovr) {
+    ovr.addEventListener("click", e => { if(e.target===ovr){showJobMgr=false;render();} });
+    const mdl = document.getElementById("mdl");
+    if (mdl) mdl.addEventListener("click", e => e.stopPropagation());
+  }
+
+  document.getElementById("app").addEventListener("click", e => {
+    const btn = e.target.closest("[data-a]");
+    if (!btn) return;
+    const a = btn.dataset.a, id = btn.dataset.id;
+    if (a==="nav-shifts")      { view="shifts"; render(); }
+    else if (a==="nav-stats") { view="stats";  render(); }
+    else if (a==="nav-add")   { form=emptyForm(); editId=null; view="add"; render(); }
+    else if (a==="open-mgr")  { showJobMgr=true; render(); }
+    else if (a==="close-mgr") { showJobMgr=false; render(); }
+    else if (a==="cancel")    { view="shifts"; form=emptyForm(); editId=null; render(); }
+    else if (a==="pay-total") { form.payMode="total"; render(); }
+    else if (a==="pay-hourly"){ form.payMode="hourly"; render(); }
+    else if (a==="pick-job")  { form.jobType=id; render(); }
+    else if (a==="pick-icon") { newJobIcon=btn.dataset.icon; render(); }
+    else if (a==="pick-color"){ newJobColor=btn.dataset.color; render(); }
+    else if (a==="save")      { doSave(); }
+    else if (a==="edit")      { doEdit(id); }
+    else if (a==="del")       { doDel(id); }
+    else if (a==="del-job")   { doDelJob(id); }
+    else if (a==="add-job")   { doAddJob(); }
+    else if (a==="export")    { doExport(); }
+  });
+}
 
       // overlay click
       const ovr = document.getElementById("ovr");
